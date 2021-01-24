@@ -210,7 +210,7 @@ function createPerson(name,age) {
     return o;
 }
 
-let person1 = createPerson('leo',19);
+let person1 = createPerson('leo',19); 
 let person2 = createPerson('kang',20);
 
 console.log(person1);  // {name: "leo", age: 19, sayName: ƒ}
@@ -422,5 +422,215 @@ Function也是一个函数，函数是一种对象，也有`__proto__`属性。�
 
 ![image-20210119204509948](..\JS_img\image-20210119204509948.png)
 
+#### ==扩展问题==
+
+问题：==为什么Son.prototype.`__proto__` = Father.prototype; 没法实现继承？==
+
+```js
+function Father() {
+    this.fatherage = 45;
+  };
+  Father.prototype.getFatherAge = function() {
+    console.log('我被调用了');
+    console.log(this);  // Son {sonage: 20}
+    return this.fatherage;
+  }
+
+  function Son() {
+    this.sonage = 20;
+  }
+
+  // 继承Father
+  // 方式一：
+  // Son.prototype = new Father();
+  // console.log(Son.prototype.__proto__);
+
+  // 方式二：为什么这样不能实现继承？
+  Son.prototype.__proto__ = Father.prototype;
+  console.log(Son.prototype.__proto__);   // {getFatherAge: ƒ (), constructor: ƒ Father()}
+
+  let son1 = new Son();
+  console.log(son1.getFatherAge());   // "我被调用了"   \n  undefined
+```
+
+![image-20210124225502578](..\JS_img\image-20210124225502578.png)
+
+==因为方式二中的这段代码其实只是实现了让Son的原型对象的`__proto__`属性指向了Father的原型对象，但因为此时Son的原型对象并没有成为Father的实例对象，所以虽然能够通过son1(Son的实例对象)调用到Father构造函数中的getFatherAge方法，但是此时的this指代不明，所以返回undefined==
+
+### 类
+
+#### 类定义
+
+与函数类型相似，类的定义有两种：
+
+```js
+  // 类声明
+  class Person {}
+
+  // 类表达式
+  const Animal = class {};
+```
+
+1. ==与函数表达式类似，类表达式在它们被求值前也不能引用；但是与函数定义不同的是，函数声明可以提升，类声明不能==
+2. 另一个与函数声明不同的地方，==函数受函数作用域限制==，而==类受块作用域限制==
+
+```js
+  {
+    function Func() {}
+    class Cls {}
+  }
+
+  console.log(Func);  // ƒ Func() {}
+  console.log(Cls);   // Cls is not defined
+```
+
+> 类表达式的标识符
+
+```js
+  /* 
+    PersonName是Person类的标识符，
+    可以通过name属性获取，但是不能
+    在类表达式作用域外部访问
+  */
+  let Person = class PersonName {
+    identify() {
+      console.log(Person.name, PersonName.name);
+    }
+  }
+
+  let p = new Person();
+  p.identify();   // PersonName PersonName
+
+  console.log(Person.name);   // PersonName
+  console.log(PersonName);   // ReferenceError: PersonName is not defined
+```
 
 
+
+#### 类构造函数
+
+> 实例化
+
+使用new调用类的构造函数会执行如下操作
+
+1. 在内存中创建一个新对象
+2. 这个新对象内部的 [[Prototype]] 指针被赋值为构造函数的prototype属性
+3. 构造函数内部的this被赋值为这个新对象（即this指向新对象）
+4. 执行构造函数内部的代码（给新对象添加属性）
+5. 如果构造函数返回非空对象，则返回该对象；否则返回创建的新对象
+
+> 把类当成特殊函数
+
+```js
+  class Person {}
+
+  console.log(Person);  // class Person {}
+  console.log(typeof Person);  // function
+```
+
+#### 实例、原型和类成员
+
+> 实例成员
+
+```js
+  class Person {
+    constructor() {
+      this.name = new String('leo');
+
+      this.sayName = () => console.log(this.name);
+
+      this.nickName = ['zhuangzhuang', 'lzz'];
+    }
+  }
+
+  let p1 = new Person(),
+      p2 = new Person();
+
+  p1.sayName();  // String {"leo"}
+  p2.sayName();  // String {"leo"}
+
+  console.log(p1.name === p2.name);  // false
+  console.log(p1.sayName === p2.sayName);  // false
+  console.log(p1.nickName === p2.nickName);  // false
+
+  p1.name = p1.nickName[0];
+  p2.name = p2.nickName[1];
+
+  p1.sayName();  // zhuangzhuang
+  p2.sayName();  // lzz
+```
+
+==每个实例都对应一个唯一的成员对象，这意味着所有成员都不会在原型上共享==
+
+> 原型方法与访问器
+
+==在类块中定义的所有内容都会被定义在类的原型上==
+
+```js
+  class Person {
+    constructor() {
+      // 此方法存在于每个实例对象上
+      this.locate = () => console.log('instance');
+    }
+
+    // 在类块中定义的方法都会被定义在类的原型上
+    locate() {
+      console.log('prototype');
+    }
+  }
+
+  let p = new Person();
+
+  p.locate();  // instance
+  Person.prototype.locate();  // prototype
+  p.__proto__.locate();  // prototype
+```
+
+> 访问器
+
+类定义也支持获取和设置访问器。语法与行为与普通函数一样
+
+> 静态类方法
+
+```js
+  class Person {
+    constructor() {
+      // 定义在每个实例对象上
+      this.locate = () => console.log('instance => ', this);
+    }
+
+    // 定义在类的原型上
+    locate() {
+      console.log('prototype => ', this);
+    }
+
+    // 定义在类本身上
+    static locate() {
+      console.log('class => ', this);
+    }
+  }
+
+  let p = new Person();
+
+  p.locate();  // instance =>  Person {}
+  Person.prototype.locate();  // prototype =>  {constructor: ƒ, locate: ƒ}
+  Person.locate();  // class =>  class Person {...}
+```
+
+静态类方法非常适合作为实例工厂
+
+#### 继承
+
+> 构造函数、HomeObject()和super()
+
+派生类的方法可以通过super关键字引用它们的原型。这个关键字只能在派生类中使用，而且仅限于类构造函数、实例方法和静态方法内部，在类构造函数中使用super可以调用父类构造函数。
+
+* ==在使用super时要注意的问题：==
+
+1. super只能在派生类构造函数和静态方法中使用
+2. 不能单独引用super关键字，要么用它调用构造函数，要么用它引用静态方法
+3. 调用super()会调用父类构造函数，并将返回的实例赋值给this
+4. super()的行为如同调用构造函数，如果需要给父类构造函数传参，则需要手动传入
+5. 如果没有定义类构造函数，在实例化派生类时会调用super()，而且会传入所有传给派生类的参数
+6. 在类构造函数中，不能在调用super()之前调用this
+7. 如果在派生类中显式定义了构造函数，则要么必须在其中调用super()，要么必须在其中返回一个对象
