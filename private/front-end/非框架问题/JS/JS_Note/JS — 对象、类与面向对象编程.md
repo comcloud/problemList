@@ -455,7 +455,7 @@ function Father() {
 
 ![image-20210124225502578](..\JS_img\image-20210124225502578.png)
 
-==因为方式二中的这段代码其实只是实现了让Son的原型对象的`__proto__`属性指向了Father的原型对象，但因为此时Son的原型对象并没有成为Father的实例对象，所以虽然能够通过son1(Son的实例对象)调用到Father构造函数中的getFatherAge方法，但是此时的this指代不明，所以返回undefined==
+==因为方式二中的这段代码其实只是实现了让Son的原型对象的`__proto__`属性指向了Father的原型对象，但因为此时Son的原型对象并没有成为Father的实例对象，所以虽然能够通过son1(Son的实例对象)调用到Father构造函数中的getFatherAge方法，但是此时的this指代Son对象，所以返回undefined==
 
 ### 类
 
