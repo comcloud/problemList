@@ -4,13 +4,9 @@
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20201201192958856.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NTY4NjU4Mw==,size_16,color_FFFFFF,t_70)
 
-> 这样看的话感觉有点复杂，毕竟我们使用最频繁的就是
->
-> `Map<Object,Object> map = new HashMap<>()`
->
-> `List<Object> list = new ArrayList<>()`
->
-> `Set<Object> set = new HashSet<>()`
+> 真正说之前我们需要思考一个问题：**为什么要使用集合**，虽然这些集合框架很丰富，但是我们为什么要使用呢？这个就要回归到集合的本身作用，集合实际上就是一个容器，容器的作用就是存放东西，存放 东西有个最基本的数据结构**数组**,数组的缺点显而易见(大小固定，存储数据有序而且可以重复，使用起来也很单一)，所以就有了集合的存在，他提高了数据存储的灵活性(即使底层使用数组来实现一部分)
+
+
 
 ### 集合简单理解
 
@@ -64,6 +60,111 @@
 */
 //这个抽象Map中有个需要注意的地方就是toString方法，懂这个对于我们理解entrySet有很好的帮助
 ~~~
+
+### 怎么选用集合
+
+> 我们可以根据集合的特点加上我们自己的业务需求来确定
+>
+> 比如我们需要根据键值获取到元素值时就选用 `Map` 接口下的集合，需要排序时选择 `TreeMap`,不需要排序时就选择 `HashMap`,需要保证线程安全就选用 `ConcurrentHashMap`。
+>
+> 当我们只需要存放元素值时，就选择实现`Collection` 接口的集合，需要保证元素唯一时选择实现 `Set` 接口的集合比如 `TreeSet` 或 `HashSet`，不需要就选择实现 `List` 接口的比如 `ArrayList` 或 `LinkedList`，然后再根据实现这些接口的集合的特点来选用。
+
+
+
+### 谈一下过时的集合
+
+> 虽然集合中有些东西过时，但是还是要谈一下的，我们要做到不仅知其然还是所以然
+
+- `Vector`
+
+~~~java
+/**
+这个对于我们来说算是比较陌生的了，他实际上线程安全的，ArrayList是线程不安全的，但是为什么会弃用呢？
+Vector同步每个单独的操作。这几乎从来不是你想要做的。
+通常你想同步整个操作序列。同步单个操作不太安全（Vector例如，如果你遍历一个，例如，你仍然需要取出一个锁，以避免其他人同时改变集合，这将导致ConcurrentModificationException迭代线程），但也更慢为什么要重复一次锁就好了）？
+当然，即使你不需要，它也有锁定的开销。
+基本上，在大多数情况下，这是一个非常有缺陷的同步方法。正如Brian Henk先生指出的那样，您可以使用如下调用来装饰集合Collections.synchronizedList：Vector将“调整大小的数组”集合实现与“每个操作同步”位相结合的事实是设计不佳的另一个例子; 装饰方式让人更清楚的分离关注点。
+*/
+//比如参见以下源码，同步整个操作序列
+public synchronized void removeElementAt(int index) {
+    modCount++;
+    if (index >= elementCount) {
+        throw new ArrayIndexOutOfBoundsException(index + " >= " +
+                                                 elementCount);
+    }
+    else if (index < 0) {
+        throw new ArrayIndexOutOfBoundsException(index);
+    }
+    int j = elementCount - index - 1;
+    if (j > 0) {
+        System.arraycopy(elementData, index + 1, elementData, index, j);
+    }
+    elementCount--;
+    elementData[elementCount] = null; /* to let gc do its work */
+}
+~~~
+
+> 既然这样的话，Vector是线程安全的但是被弃用了(或者说是不推荐使用)，那么在多线程情况下我们应该使用什么集合容器呢，我这里说几种
+
+1. `java.util.Collections.SynchronizedList`
+
+~~~java
+//传入一个集合包装成一个线程安全的集合，这时候HashMap也有同样类似的实现
+//但是这个同步集合性能不是挺好的，内部所有方法都是带有同步对象锁的
+SynchronizedList(List<E> list) {
+    super(list);
+    this.list = list;
+}
+~~~
+
+2. `java.util.concurrent.CopyOnWriteArrayList
+   java.util.concurrent.CopyOnWriteArraySet`
+
+~~~java
+//这两个类属于并发包下的，CopyOnWrite（简称：COW）：即复制再写入，就是在添加元素的时候，先把原 List 列表复制一份，再添加新的元素。
+//这个属于List中的add源码，
+public boolean add(E e) {
+    final ReentrantLock lock = this.lock;
+    //加锁
+    lock.lock();
+    try {
+        Object[] elements = getArray();
+        int len = elements.length;
+        //重新复制一份
+        Object[] newElements = Arrays.copyOf(elements, len + 1);
+        newElements[len] = e;
+        //把新的设置进去
+        setArray(newElements);
+        return true;
+    } finally {
+        //释放锁
+        lock.unlock();
+    }
+}
+//但是获取的话就不用加锁
+private E get(Object[] a, int index) {
+    return (E) a[index];
+}
+//Set那个底层直接使用List来实现了，不过我们还是要知道Set的一个特点那就是不重复，那么他会去判断添加的元素是否已经存在
+~~~
+
+> 这两种并发集合，虽然停厉害，但只适合于读多写少的情况，如果写多读少，使用这个就没意义了，因为每次写操作都要进行集合内存复制，性能开销很大，如果集合较大，很容易造成内存溢出。
+
+
+
+- `Hashtable`
+
+> 这个也被弃用，弃用原因主要因为`HashMap`有了更高效的实现，我们大多数时候使用`HashMap`来就可以，但是`Hashtable`是线程安全的，类似于上面的Vector，`HashMap`是线程不安全的，同时我们可以进行包装或者直接创建一个线程安全的
+>
+> `Collections.synchronizedMap()`
+>
+> `ConcurrentHashMap`
+
+> 说个题外话，为什么`JDK`中有`Hashtable`这个不满足命名规范的东西，一句话：他是很古老的一个实现类
+>
+> `Hashtable` 是在 Java 1.0 的时候创建的，而集合的统一规范命名是在后来的 Java 2 开始约定的，当时其他一部分集合类的发布构成了新的集合框架。
+>
+> 顺便说一下，这样就使得 `Hashtable` 过时了，所以不应该在新代码中继续使用它。
 
 ### 提一嘴
 
