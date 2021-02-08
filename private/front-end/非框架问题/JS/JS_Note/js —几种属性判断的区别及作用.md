@@ -54,11 +54,15 @@ console.log(a instanceof Array);//true
 语法：`"key" in object`
 
 ```js
-let user={name:'asda'};
-//name是它自身定义的属性，toString是它从原型链上继承下来的属性
+let user = { name: 'asda',age:123 };
+//age是自己的属性，toString是它从原型链上继承下来的属性
 console.log('name' in user);//true
 console.log('toString' in user);//true
 console.log('name' in Object);//true
+console.log('age' in Object);//false
+// 为什么这里的name是true,age是false，因为Object中自己有name属性，而没有age属性
+console.log(Object.hasOwnProperty('name')); // true
+console.log(Object.hasOwnProperty('age')); // false
 ```
 
 ## hasOwnProperty
