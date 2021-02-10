@@ -13,6 +13,8 @@
   	       undefined : undefined
   	
   	     null : null
+             ES6:Symbol
+             Es10:BigInt
 
 ### 	引用类型
 
