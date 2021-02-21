@@ -28,7 +28,7 @@ ctx.rect(50, 50, 100, 100);
 ctx.fillRect(50, 50, 50, 50);
 ```
 
-![image-20210210145309128](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210145309128.png)
+![image-20210210145309128](..\JS_img\image-20210210145309128.png)
 
 `strokeRect()`:绘制矩形(无填充)
 
@@ -58,7 +58,7 @@ ctx.fillStyle="green";//填充颜色
 ctx.fill()
 ```
 
-![image-20210210143038480](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210143038480.png)
+![image-20210210143038480](..\JS_img\image-20210210143038480.png)
 
 ## 描边
 
@@ -74,7 +74,7 @@ ctx.strokeStyle = "green"//描边颜色
 ctx.stroke();
 ```
 
-![image-20210210143319913](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210143319913.png)
+![image-20210210143319913](..\JS_img\image-20210210143319913.png)
 
 ## 画线条
 
@@ -99,7 +99,7 @@ ctx.lineWidth = 4;
 ctx.stroke();
 ```
 
-![image-20210210144818065](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210144818065.png)
+![image-20210210144818065](..\JS_img\image-20210210144818065.png)
 
 ```js
 ctx.beginPath();
@@ -112,7 +112,7 @@ ctx.lineWidth = 10;
 ctx.stroke();
 ```
 
-![image-20210210145010940](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210145010940.png)
+![image-20210210145010940](..\JS_img\image-20210210145010940.png)
 
 **修改**
 
@@ -127,7 +127,7 @@ ctx.lineWidth = 10;
 ctx.stroke();
 ```
 
-![image-20210210145118161](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210145118161.png)
+![image-20210210145118161](..\JS_img\image-20210210145118161.png)
 
 ## 圆形
 
@@ -142,7 +142,7 @@ ctx.fillStyle = "yellow"
 ctx.fill();
 ```
 
-![image-20210210145727716](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210145727716.png)
+![image-20210210145727716](..\JS_img\image-20210210145727716.png)
 
 ## 线性渐变
 
@@ -164,7 +164,7 @@ ctx.fillStyle = grd;//设置渐变
 ctx.fillText('兄弟们好', 100, 500);
 ```
 
-![image-20210210150240767](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210150240767.png)
+![image-20210210150240767](..\JS_img\image-20210210150240767.png)
 
 ## 对齐
 
@@ -175,7 +175,7 @@ ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
 ```
 
-![image-20210210150401562](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210150401562.png)
+![image-20210210150401562](..\JS_img\image-20210210150401562.png)
 
 ## 转换
 
@@ -202,7 +202,7 @@ ctx.lineWidth=4;
 ctx.stroke();
 ```
 
-![image-20210210203458328](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210210203458328.png)
+![image-20210210203458328](..\JS_img\image-20210210203458328.png)
 
 ## 其他
 
@@ -237,7 +237,7 @@ restore():返回之前保存过的路径状态和属性
         drowShape(5);
 ```
 
-![image-20210221145934415](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210221145934415.png)
+![image-20210221145934415](..\JS_img\image-20210221145934415.png)
 
 没有save:
 
@@ -266,4 +266,4 @@ restore():返回之前保存过的路径状态和属性
         drowShape(5);
 ```
 
-![image-20210221150025529](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210221150025529.png)
+![image-20210221150025529](..\JS_img\image-20210221150025529.png)
