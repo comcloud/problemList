@@ -1,4 +1,4 @@
-# JS — 集合引用类型
+# JS — 集合引用类型与迭代器
 
 ## Object
 
@@ -381,9 +381,158 @@ Set会维护插入时顺序，因此支持按顺序迭代
 
 <img src="..\JS_img\image-20201125153048804.png" alt="image-20201125153048804" style="zoom:67%;" />
 
+#### 可迭代协议
+
+可以通过检查实例的[Symbol.iterator]属性，来判断是否存在默认迭代器属性
+
+```js
+  let arr = new Array();
+  let str = new String();
+  let map = new Map();
+  let set = new Set();
+  // 当然还有一些NodeList等DOM集合类型
+
+  console.log(arr[Symbol.iterator]);  // ƒ values() { [native code] }
+  console.log(str[Symbol.iterator]);  // ƒ [Symbol.iterator]() { [native code] }
+  console.log(map[Symbol.iterator]);  // ƒ entries() { [native code] }
+  console.log(set[Symbol.iterator]);  // ƒ values() { [native code] }
+  
+  console.log(arr[Symbol.iterator]());  // Array Iterator {}
+  console.log(str[Symbol.iterator]());  // StringIterator {}
+  console.log(map[Symbol.iterator]());  // MapIterator {}
+  console.log(set[Symbol.iterator]());  // SetIterator {}
+```
+
+> 如果对象原型链上的父类实现了Iterable接口，那这个对象也就实现了这个接口
+
+```js
+  class SonArray extends Array {}
+  let son_arr = new SonArray(11,23,34);
+  /* 包含[Symbol.iterator]属性 */
+  console.log(son_arr[Symbol.iterator]().__proto__.__proto__);  // {Symbol(Symbol.iterator): ƒ}
+
+  for(let ele of son_arr) {
+    console.log(ele);
+  }
+  // 11
+  // 23
+  // 34
+```
+
+* ==迭代器维护着一个指向可迭代对象的引用，因此迭代器会阻止垃圾回收程序回收可迭代对象==
+
+#### 迭代器协议
+
+```js
+  let arr = new Array(12,23);
+  let iter = arr[Symbol.iterator]();
+  console.log(iter);   // Array Iterator {}
+
+  console.log(iter.next());  // {value: 12, done: false}
+  console.log(iter.next());  // {value: 23, done: false}
+  console.log(iter.next());  // {value: undefined, done: true}
+  console.log(iter.next());  // {value: undefined, done: true}
+```
+
+> 如果可迭代对象在迭代期间被修改，那么迭代器也会反映相应的变化
+
+```js
+  let arr = ['fly','swim'];
+  let iter = arr[Symbol.iterator]();
+
+  console.log(iter.next());  // {value: "fly", done: false}
+
+  // 添加值
+  arr.splice(1, 0, 'code');
+
+  console.log(iter.next());  // {value: "code", done: false}
+  console.log(iter.next());  // {value: "swim", done: false}
+  console.log(iter.next());  // {value: undefined, done: false}
+```
+
+#### 自定义迭代器
+
+```js
+  class Counter {
+    // Counter的实例应该迭代limit次
+    constructor(limit) {
+      this.count = 1;
+      this.limit = limit;
+    }
+
+    next() {
+      if(this.count <= this.limit) {
+        return {done: false, value: this.count++};
+      }else {
+        return {done: true, value: undefined};
+      }
+    }
+
+    [Symbol.iterator]() {
+      return this;
+    }
+
+  }
+
+  let counter = new Counter(3);
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // 1
+  // 2
+  // 3
+
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // print of nothing
+```
+
+这样自定义的迭代器虽然实现了Iterator接口，但是它的每个实例只能迭代一次（因为count计数器是同一个)
+
+通过将计数器变量放到闭包中，然后通过闭包返回迭代器
+
+```js
+  class Counter {
+    constructor(limit) {
+      this.limit = limit;
+    }
+
+    [Symbol.iterator]() {
+      let count = 1,
+          limit = this.limit;
+      return {
+        next() {
+          if(count <= limit) {
+            return {done: false, value: count++};
+          }else {
+            return {done: true, value: undefined};
+          }
+        }
+      }
+    }
+
+  }
+
+  let counter = new Counter(3);
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // 1
+  // 2
+  // 3
+
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // 1
+  // 2
+  // 3
+```
+
 #### 迭代器方法
 
-使用者：迭代器（数组或者类数组对象<比如Set、Map集合>）
+使用者：迭代器（数组或者类数组对象<比如Set、Map集合>等）
 
 返回值：迭代器
 
