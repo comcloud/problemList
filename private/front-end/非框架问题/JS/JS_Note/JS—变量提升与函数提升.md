@@ -52,7 +52,7 @@ function fn(){
         } 
 ```
 
-![image-20210228150724496](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210228150724496.png)
+![image-20210228150724496](..\JS_img\image-20210228150724496.png)
 
 ## 执行上下文
 
@@ -130,7 +130,7 @@ var foo=function(y){
 bar(10)                 //2.进入bar函数执行上下文
 ```
 
-![image-20210228162035311](C:%5CUsers%5C%E6%9D%8E%E4%B8%83%E5%A4%9C%5CDesktop%5CT%5Cimage-20210228162035311.png)
+![image-20210228162035311](..\JS_img\image-20210228162035311.png)
 
 ## 变量提升覆盖规则
 
