@@ -1,4 +1,4 @@
-# JS — 集合引用类型
+# JS — 集合引用类型与迭代器
 
 ## Object
 
@@ -107,7 +107,7 @@ let m = new Map()
 
 ### 迭代器方法
 
-ES6中，Array的原型上暴露了3个用于检索数组内容的方法：keys()、values()、entries()；
+ES6中，==Array的原型==上暴露了3个用于检索数组内容的方法：keys()、values()、entries()；==除此之外Set与Map的原型上也暴露了这三个方法==
 
 keys()：返回数组索引的迭代器
 
@@ -377,19 +377,276 @@ Set会维护插入时顺序，因此支持按顺序迭代
 
 ### 迭代器
 
+==注意：不是说Array、Arguments、Set等就是迭代器，他们只是不同的数据结构，而迭代器只是一种接口，当这些数据结构实现了这个接口，他们就具有迭代的能力。==
+
 <img src="..\JS_img\image-20201125152606923.png" alt="image-20201125152606923" style="zoom:67%;" />
 
 <img src="..\JS_img\image-20201125153048804.png" alt="image-20201125153048804" style="zoom:67%;" />
 
+#### 可迭代协议
+
+可以通过**检查实例的[Symbol.iterator]属性**，来判断是否存在默认迭代器属性（**也就是判断是否实现了迭代器接口**）
+
+```js
+  let arr = new Array();
+  let str = new String();
+  let map = new Map();
+  let set = new Set();
+  // 当然还有一些NodeList等DOM集合类型
+
+  console.log(arr[Symbol.iterator]);  // ƒ values() { [native code] }
+  console.log(str[Symbol.iterator]);  // ƒ [Symbol.iterator]() { [native code] }
+  console.log(map[Symbol.iterator]);  // ƒ entries() { [native code] }
+  console.log(set[Symbol.iterator]);  // ƒ values() { [native code] }
+  
+  console.log(arr[Symbol.iterator]());  // 返回迭代器 Array Iterator {}
+  console.log(str[Symbol.iterator]());  // 返回迭代器 StringIterator {}
+  console.log(map[Symbol.iterator]());  // 返回迭代器 MapIterator {}
+  console.log(set[Symbol.iterator]());  // 返回迭代器 SetIterator {}
+```
+
+> 如果对象原型链上的父类实现了Iterable接口，那这个对象也就实现了这个接口
+
+```js
+  class SonArray extends Array {}
+  let son_arr = new SonArray(11,23,34);
+  /* 包含[Symbol.iterator]属性 */
+  console.log(son_arr[Symbol.iterator]().__proto__.__proto__);  // {Symbol(Symbol.iterator): ƒ}
+
+  for(let ele of son_arr) {
+    console.log(ele);
+  }
+  // 11
+  // 23
+  // 34
+```
+
+* ==迭代器维护着一个指向可迭代对象的引用，因此迭代器会阻止垃圾回收程序回收可迭代对象==
+
+#### 迭代器协议
+
+> **为什么实现了迭代器接口就可以具有遍历的能力呢？**
+
+**我们通过查看实例的[Symbol.iterator]()方法的返回值，可以发现返回的迭代器对象的原型对象上实现了next()才使得数据结构具有了迭代的能力（后面有通过next()自定义实现迭代器方式）**
+
+```js
+  let arr = new Array(12,23);
+  let iter = arr[Symbol.iterator]();
+  console.log(iter);   // Array Iterator {}
+
+  console.log(iter.next());  // {value: 12, done: false}
+  console.log(iter.next());  // {value: 23, done: false}
+  console.log(iter.next());  // {value: undefined, done: true}
+  console.log(iter.next());  // {value: undefined, done: true}
+```
+
+> 如果可迭代对象在迭代期间被修改，那么迭代器也会反映相应的变化
+
+```js
+  let arr = ['fly','swim'];
+  let iter = arr[Symbol.iterator]();
+
+  console.log(iter.next());  // {value: "fly", done: false}
+
+  // 添加值
+  arr.splice(1, 0, 'code');
+
+  console.log(iter.next());  // {value: "code", done: false}
+  console.log(iter.next());  // {value: "swim", done: false}
+  console.log(iter.next());  // {value: undefined, done: false}
+```
+
+#### 自定义迭代器
+
+```js
+  class Counter {
+    // Counter的实例应该迭代limit次
+    constructor(limit) {
+      this.count = 1;
+      this.limit = limit;
+    }
+
+    next() {
+      if(this.count <= this.limit) {
+        return {done: false, value: this.count++};
+      }else {
+        return {done: true, value: undefined};
+      }
+    }
+
+    [Symbol.iterator]() {
+      return this;
+    }
+
+  }
+
+  let counter = new Counter(3);
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // 1
+  // 2
+  // 3
+
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // print of nothing
+```
+
+这样自定义的迭代器虽然实现了Iterator接口，但是它的每个实例只能迭代一次（因为count计数器是同一个)
+
+通过将计数器变量放到闭包中，然后通过闭包返回迭代器
+
+```js
+  class Counter {
+    constructor(limit) {
+      this.limit = limit;
+    }
+
+    [Symbol.iterator]() {
+      let count = 1,
+          limit = this.limit;
+      return {
+        next() {
+          if(count <= limit) {
+            return {done: false, value: count++};
+          }else {
+            return {done: true, value: undefined};
+          }
+        }
+      }
+    }
+
+  }
+
+  let counter = new Counter(3);
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // 1
+  // 2
+  // 3
+
+  for(let ele of counter) {
+    console.log(ele);
+  }
+  // 1
+  // 2
+  // 3
+```
+
+> ==当你真正的理解了迭代器的实现原理，你可以为任意的类型实现迭代效果==
+
+* ES6实现方式
+
+```js
+  class Person {
+    constructor(name,age,skill) {
+      this.name = name;
+      this.age = age;
+      this.skill = skill;
+      this.Args = arguments;
+    }
+
+    // 实现Iterator接口
+    [Symbol.iterator]() {
+      // 定义计数器
+      let count = 0;
+      // 存储所有参数
+      let AllArgs = this.Args;
+      /* 
+        返回一个迭代器对象
+          - 这个对象需要实现next()方法
+      */
+      return {
+        next() {
+          if(count < AllArgs.length) {
+            return { done: false, value: AllArgs[count++] };
+          }else {
+            return { done: true, value: undefined };
+          }
+        }
+      };
+    }
+
+  }
+
+  let person = new Person('leo',20,'play code');
+  console.log(person);
+
+  let iter = person[Symbol.iterator]();
+  console.log(iter.next());  // {done: false, value: "leo"} 
+  console.log(iter.next());  // {done: false, value: 20}
+  console.log(iter.next());  // {done: false, value: "play code"}
+  console.log(iter.next());  // {done: true, value: undefined}
+  console.log(iter.next());  // {done: true, value: undefined}
+
+  for(let ele of person) {
+    console.log(ele);
+  }
+  // leo
+  // 20
+  // play code
+```
+
+* ES5实现方式
+
+```js
+  function Number(num1, num2, num3) {
+    this.num1 = num1;
+    this.num2 = num2;
+    this.num3 = num3;
+    this.args = arguments;
+  }
+  
+  Number.prototype[Symbol.iterator] = function() {
+    // 定义计数器
+    let count = 0;
+    // 存储参数集合
+    let Args = this.args;
+    return {
+      next() {
+        if(count < Args.length) {
+          return { done: false, value: Args[count++] };
+        }else {
+          return { done: true, value: undefined }; 
+        }
+      }
+    }
+  };
+  
+  let numList = new Number(11,23,34);
+  console.log(numList);
+
+  for(let ele of numList) {
+    console.log(ele);
+  }
+  // 11
+  // 23
+  // 34
+  
+  for(let ele of numList) {
+    console.log(ele);
+  }
+  // 11
+  // 23
+  // 34
+```
+
 #### 迭代器方法
 
-使用者：迭代器（数组或者类数组对象<比如Set、Map集合>）
+>  keys()、values()、entries() 迭代器方法
 
-返回值：迭代器
+使用者：==数组==或者==Set、Map（可以直接查看实例的原型对象上是否存在这三个方法）==
+
+返回值：迭代器对象
 
 ### 迭代方法
 
-使用者：主要是数组；Set与Map只可以使用forEach()
+> every()、some()、filter()、map()、forEach()
+
+使用者：主要是==数组==；==Set与Map只可以使用forEach()==
 
 ### Map与Set对于迭代方法的使用
 
